@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WascoAppTest.Data;
+using WascoAppTest.Helper;
 using WascoAppTest.Models;
+using WascoAppTest.Service;
 using WascoAppTest.Services.CategoriesService;
 using WascoAppTest.Services.ProductsService;
 
@@ -30,6 +32,8 @@ builder.Services.AddIdentity<Users, IdentityRole>(options =>
 builder.Services.AddScoped<ICategoriesService, CategoriesService>();
 builder.Services.AddScoped<IProductsService, ProductsService>();
 
+builder.Services.AddFluentEmail(builder.Configuration);
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

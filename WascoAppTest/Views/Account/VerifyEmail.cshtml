@@ -6,23 +6,37 @@
     Layout = "~/Views/Shared/_AccountLayout.cshtml";
 }
 
-<div class="account-container">
-    <div class="account-box">
-        <h2 class="text-center mb-4">Verify Email</h2>
-        <form asp-action="VerifyEmail" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <input type="submit" value="Verify" class="btn btn-success w-100 p-2" />
-            <div class="text-center mt-2">
-                <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
-            </div>
-        </form>
+@if (Model != null && Model.FullName != "") {
+     <div class="d-flex flex-column justify-content-center align-items-center vh-100">
+        <div class="d-flex flex-column justify-content-center align-items-center text-center shadow-lg rounded-2 p-4 gap-0">
+            <p class="mb-0">A password reset email has been sent to @Model.Email </p>
+            <p class="mb-0">Please check your email</p>
+        </div>
     </div>
-</div>
+    
+} else {
+   <div class="account-container">
+        <div class="account-box">
+            <h2 class="text-center mb-4">Verify Email</h2>
+            <form asp-action="VerifyEmail" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <input type="submit" value="Verify" class="btn btn-success w-100 p-2" />
+                <div class="text-center mt-2">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+
+
+
 
 @section Scripts {
     @{

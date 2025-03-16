@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using WascoAppTest.Models;
+using WascoAppTest.Service;
 using WascoAppTest.ViewModels;
+using static Azure.Core.HttpHeader;
 
 namespace WascoAppTest.Controllers
 {
@@ -9,11 +12,13 @@ namespace WascoAppTest.Controllers
     {
         private readonly SignInManager<Users> signInManager;
         private readonly UserManager<Users> userManager;
+        private readonly IEmailService _iEmailService;
 
-        public AccountController(SignInManager<Users> signInManager, UserManager<Users> userManager)
+        public AccountController(SignInManager<Users> signInManager, UserManager<Users> userManager, IEmailService iEmailService)
         {
             this.signInManager = signInManager;
             this.userManager = userManager;
+            _iEmailService = iEmailService ?? throw new ArgumentNullException(nameof(iEmailService));
         }
 
         public IActionResult Login()
@@ -41,9 +46,9 @@ namespace WascoAppTest.Controllers
             return View(model);
         }
 
-        public IActionResult Register()
+        public IActionResult Register(string email)
         {
-            return View();
+            return View(email);
         }
 
         [HttpPost]
@@ -85,10 +90,9 @@ namespace WascoAppTest.Controllers
         [HttpPost]
         public async Task<IActionResult> VerifyEmail(VerifyEmailViewModel model)
         {
-            if (ModelState.IsValid)
+            if (model.Email != "")
             {
                 var user = await userManager.FindByNameAsync(model.Email);
-
                 if (user == null)
                 {
                     ModelState.AddModelError("", "Something is wrong!");
@@ -96,19 +100,75 @@ namespace WascoAppTest.Controllers
                 }
                 else
                 {
-                    return RedirectToAction("ChangePassword", "Account", new { username = user.UserName });
+                    var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                    var link = Url.Action("ResetPassword", "Account", new { token, email = user.Email }, Request.Scheme);
+                    var EmailTitle = "Wasco Test App Reset Password";
+                    var EmailBody = link != null ? link : "";
+                    EmailMetadata _EmailMetadata = new(model.Email, EmailTitle, EmailBody);
+                    await _iEmailService.Send(_EmailMetadata);
+
+                    return View(model);
                 }
             }
             return View(model);
         }
 
-        public IActionResult ChangePassword(string username)
+        public IActionResult ResetPassword(string email, string token)
         {
-            if (string.IsNullOrEmpty(username))
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
             {
                 return RedirectToAction("VerifyEmail", "Account");
             }
-            return View(new ChangePasswordViewModel { Email = username });
+            return View(new ResetPasswordViewModel { Email = email, Token = token });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await userManager.FindByNameAsync(model.Email);
+                if (user != null)
+                {
+                    var result = await userManager.RemovePasswordAsync(user);
+                    if (result.Succeeded)
+                    {
+                        result = await userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+                        return RedirectToAction("Login", "Account");
+                    }
+                    else
+                    {
+
+                        foreach (var error in result.Errors)
+                        {
+                            ModelState.AddModelError("", error.Description);
+                        }
+
+                        return View(model);
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Email not found!");
+                    return View(model);
+                }
+            }
+            else
+            {
+                ModelState.AddModelError("", "Something went wrong. try again.");
+                return View(model);
+            }
+
+
+        }
+
+        public IActionResult ChangePassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("VerifyEmail", "Account");
+            }
+            return View(new ChangePasswordViewModel { Email = email });
         }
 
         [HttpPost]

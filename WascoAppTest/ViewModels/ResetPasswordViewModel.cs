@@ -2,11 +2,10 @@
 
 namespace WascoAppTest.ViewModels
 {
-    public class ResetPasswordViewModel
+    public class ChangePasswordViewModel
     {
         [Required(ErrorMessage = "Email is required.")]
         [EmailAddress]
-        public string Token { get; set; }
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
