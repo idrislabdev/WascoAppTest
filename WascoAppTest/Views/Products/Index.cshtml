@@ -1,0 +1,77 @@
+﻿@model IEnumerable<Products>
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+
+@if (!Model.Any())
+{
+    <div class="alert alert-warning mt-5 d-flex flex-column justify-content-center align-items-center gap-2">
+        <div class="flex flex-column justify-content-center align-items-center gap-0 text-center">
+            <h4 class="alert-heading">No Products!</h4>
+            <p class="mb-0">No Products were added yet.</p>
+        </div>
+        <a class="btn btn-secondary" asp-action="Form">
+            Add Product
+        </a>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-column gap-1">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <form class="d-flex align-items-center gap-2" asp-controller="Products" asp-action="Index">
+                <input name="searchString" type="search" placeholder="Search Product..." class="form-control" style="width:200px;" />
+                <button class="btn btn-primary" type="submit">Go</button>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary">Clear</a>
+            </form>
+            <a class="btn btn-secondary" asp-action="Form">
+                Add Product
+            </a>
+        </div>
+        <table class="table">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th>No</th>
+                    <th>Category</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int number = 1;
+                }
+                @foreach(var g in Model)
+                {
+                    <tr>
+                        <td>@number</td>
+                        <td>@g.Category?.CategoryName</td>
+                        <td>@g.ProductName</td>
+                        <td>@g.Price</td>
+                        <td class="align-middle">
+                            <div class="d-flex justify-content-end">
+                                <a class="btn btn-sm btn-info rounded rounded-3 me-2" asp-action="Form" asp-route-id="@g.ProductId">
+                                    Edit
+                                </a>
+                                <a href="javascript:;" class="btn btn-sm btn-danger rounded rounded-3 js-delete" data-id="@g.ProductId">
+                                    Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    number++;
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts
+{
+    <script src="~/js/products/index.js" asp-append-version="true"></script>
+
+}
+
